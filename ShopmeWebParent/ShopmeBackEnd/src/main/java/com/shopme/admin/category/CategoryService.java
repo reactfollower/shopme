@@ -22,12 +22,12 @@ import com.shopme.common.entity.Category;
 @Service
 @Transactional
 public class CategoryService {
-	private static final int ROOT_CATEGORIES_PER_PAGE = 4;
+	public static final int ROOT_CATEGORIES_PER_PAGE = 4;
 	
 	@Autowired
 	private CategoryRepository repo;
 	
-	public List<Category> listByPage(CategoryPageInfo pageInfo, int pageNum, String sortDir) {
+	public List<Category> listByPage(CategoryPageInfo pageInfo, int pageNum, String sortDir, String keyword) {
 		System.err.println("current page " + pageNum);
 		Sort sort = Sort.by("name");
 		
@@ -38,19 +38,32 @@ public class CategoryService {
 		}
 		
 		 Pageable pageable = PageRequest.of(pageNum-1 , ROOT_CATEGORIES_PER_PAGE, sort);
-		 System.err.println(pageable);
-		 Page<Category> pageCategories = repo.findRootCategories(pageable);
-		 System.err.println("pageCategories " + pageCategories.getTotalElements());
-		 System.err.println("pageCategories " + pageCategories.getTotalPages());
-		 System.err.println("pageCategories " + pageCategories.getSize());
+		 
+		 Page<Category> pageCategories = null;
+		 
+		 if (keyword != null && !keyword.isEmpty()) {
+			 pageCategories = repo.serach(keyword, pageable);
+		 } else {
+			 pageCategories = repo.findRootCategories(pageable);
+		 }
 		 
 		 List<Category> rootCategories = pageCategories.getContent();
-		 System.err.println(rootCategories.size());
-		 
+		 		 
 		 pageInfo.setTotalElements(pageCategories.getTotalElements());
 		 pageInfo.setTotalPages(pageCategories.getTotalPages());
 		 
-		 return listHirerarchicalCategories(rootCategories, sortDir);
+		 if (keyword != null && !keyword.isEmpty()) {
+			 List<Category> searchResult = pageCategories.getContent();
+			 for (Category category : searchResult) {
+				 category.setHasChildren(category.getChildren().size() > 0);
+			 }
+			 
+			 return searchResult;
+			 
+		 } else {
+			 return listHirerarchicalCategories(rootCategories, sortDir);
+		 }
+		 
 	}
 	
 	private List<Category> listHirerarchicalCategories(List<Category> rootCategories, String sortDir) {

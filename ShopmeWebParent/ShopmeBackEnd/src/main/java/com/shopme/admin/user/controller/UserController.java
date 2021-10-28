@@ -54,9 +54,6 @@ public class UserController {
 	  	Page<User> page = service.listByPage(pageNum, sortField, sortDir, keyword);
 	  	List<User> listUsers = page.getContent();
 	  	
-//	  	System.out.println("Pagenum = " + pageNum);
-//	  	System.out.println("Total elements = " + page.getTotalElements());
-//	  	System.out.println("Total pages = " + page.getTotalPages());
 	  	long startCount = (pageNum - 1) * UserService.USERS_PER_PAGE + 1;
 	  	long endCount = startCount + UserService.USERS_PER_PAGE - 1;
 	  	if (endCount > page.getTotalElements()) {
